@@ -1,0 +1,24 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: oadp-db-primary
+  namespace: default
+spec:
+  enableSuperuserAccess: true
+  instances: 2 
+  imageName: oadp/postgres-unified:17.2
+  bootstrap:
+    initdb:
+      database: app
+      owner: app
+      postInitApplicationSQL:
+        - CREATE EXTENSION IF NOT EXISTS vector;
+        - CREATE EXTENSION IF NOT EXISTS pg_duckdb;
+  postgresql:
+    shared_preload_libraries:
+      - "pg_duckdb"
+    parameters:
+      maintenance_work_mem: "512MB"
+      shared_buffers: "512MB"
+  storage:
+    size: 5Gi

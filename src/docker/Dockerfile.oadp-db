@@ -1,0 +1,33 @@
+# src/docker/Dockerfile.oadp-db
+FROM ghcr.io/cloudnative-pg/postgresql:17.2-bookworm
+
+USER root
+
+# Install dependencies for compilation (added ninja-build for DuckDB)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    git \
+    postgresql-server-dev-17 \
+    libcurl4-openssl-dev \
+    ca-certificates \
+    wget \
+    cmake \
+    g++ \
+    liblz4-dev \
+    ninja-build \
+    && rm -rf /var/lib/apt/lists/*
+
+# 1. Compile pgvector from source
+RUN cd /tmp && \
+    git clone --branch v0.8.0 https://github.com/pgvector/pgvector.git && \
+    cd pgvector && \
+    make clean && make && make install
+
+# 2. Compile pg_duckdb from source
+RUN cd /tmp && \
+    git clone https://github.com/duckdb/pg_duckdb.git && \
+    cd pg_duckdb && \
+    make USE_PGXS=1 install && \
+    rm -rf /tmp/*
+
+USER postgres
